@@ -1,0 +1,233 @@
+---
+title: "R Project"
+subtitle: "Tools For Data Science"
+author: "Tristan Cameron"
+format: html
+self-contained: true
+execute:
+  warning: FALSE
+  message: FALSE
+---
+
+## **Instructions**
+
+In this project you will be working with R base and Tidyverse.
+
+1.  ***Render*** the empty file to make sure everything is working
+2.  Consistently *Render* the file each time you answer a question
+
+⚠️ Students enrolled in CAP4755 should only solve: **1, 2, 3, 4, 6, 7, 8, and 9.**
+
+## R Base (40%)
+
+1.  Compute the difference between the current year and the year you started coding divide this by the difference between the current year and the year you were born. Multiply this with 100 to get the percentage of your life you have been programming.
+
+```{r}
+#Code here
+x = (2025-2022) / (2025 - 2000) * 100
+x
+
+```
+
+2.  Compute the mean of the square root of a vector of 100 random numbers.
+
+```{r}
+#Code here
+# generate 100 random numbers
+random = c(abs(rnorm(100)))
+random
+
+# find the sqrt
+root = sqrt(random)
+root
+
+# find the mean
+mean(root)
+
+```
+
+3.  Make a vector from 1 to 100. Make a `for-loop` which runs through the whole vector. Multiply the elements which are smaller than 20 or larger than 80 by 10 and the other elements by 0.1.
+
+```{r}
+#Code here
+vector = seq(1:100)
+i = numeric()
+for (i in 1:100) {
+  if (vector[i] < 20 || vector[i] > 80) {
+    vector[i] = vector[i] * 10
+  } else {
+    vector[i] = vector[i] * .1
+  }
+}
+vector
+
+```
+
+4.  Write a *`function`* to combine questions 2 and 3, so that you can feed it an integer `n` you like (as argument). The function 1) generates `n` random number, 2) multiplies the elements which are smaller than 20 or larger than 80 by 10 and the other elements by 0.1, then 3) returns the mean of the square root of the vector.
+
+```{r}
+#Code here
+thisFunction = function(n) {
+  random = c(abs(rnorm(n)))
+  root = sqrt(random)
+  root_mean = mean(root)
+  vector = seq(1:n)
+  i = numeric()
+  for (i in 1:n) {
+    if (vector[i] < 20 || vector[i] > 80) {
+      vector[i] = vector[i] * 10
+    } else {
+      vector[i] = vector[i] * .1
+    }
+  }
+  return (data.frame("Random vector" = random, "Square root" = root, "Mean" = root_mean, "Adjusted vector" = vector))
+}
+thisFunction(84)
+
+```
+
+## R Tidyverse (60%)
+
+### Baby names distribution data
+
+We will look into the distribution of baby names. Use Tidyverse to answer the questions. This data set has over 2 millions rows from 1880 to 2022 It was provided by the Social Security Administration. It has the following variables:
+
+-   year: birth year
+-   sex: Female or Male
+-   name: baby name
+-   counts: number of babies named "name" in that year with that sex
+
+#### Data Wrangling
+
+Read the data in R and called it **`bbnames`**:
+
+```{r}
+# load packages
+library(data.table)
+library(tidyverse)
+library(dplyr)
+
+# Load the data - take a minute to load :)
+bbnames = fread("https://pages.uwf.edu/acohen/teaching/datasets/babynames.csv", drop = "V1")
+bbnames
+
+# Code here
+```
+
+5.  Find the number of babies (names) born in the same year. (hints: use `group_by` and `summarise`). Then, find which year had the highest number of babies:
+
+```{r}
+#Code here
+#Group by year and count number of babies
+yearly_counts <- bbnames %>% group_by(year) %>% summarise(baby_count = n())
+
+#Find year with most babies
+most_babies <- yearly_counts %>% arrange(desc(baby_count)) %>% slice(1)
+print(yearly_counts)
+print(most_babies)
+
+```
+
+6.  Find the most popular, all time, name for each sex (hints: answer for females starts with **M** and males with **J**):
+
+```{r}
+#Code here
+#summarise counts by name and gender
+total_counts <- bbnames %>% group_by(sex, name) %>% summarise(total_count = sum(counts), groups = 'drop')
+
+#find most popular name for each gender
+most_popular_names <- total_counts %>% group_by(sex) %>% slice_max(total_count, n = 1, with_ties = F) %>% ungroup()
+
+print(most_popular_names)
+```
+
+7.  Create a new data frame while creating a new variable `age` and filter by `age` - Pick a threshold that would keep only people who may still alive (you may use the age expectancy):
+
+```{r}
+#Code here
+#Create new variable and calculate age
+new_data <- bbnames %>% mutate(age = 2025 - year) %>% filter(age <= 80)
+
+print(new_data)
+
+```
+
+#### Visualization
+
+8.  Use ggplot to plot the distribution of the name *John, x-axis is `year`* and y-axis is `counts`. Use `geom_bar()`, `geom_line()`, and `facet_wrap()` to separate females and males (use `scale="free"` to free the scales) .
+
+```{r}
+#Code here
+library(ggplot2)
+john_data <- subset(bbnames, name == "John")
+
+ggplot(john_data, aes(x = year)) +
+  geom_bar(aes(fill = sex), position = "dodge") +  
+  geom_line(stat = "count", aes(group = sex, color = sex), size = 1) +  
+  facet_wrap(~ sex, scales = "free") +  
+  labs(title = "Distribution of the name 'John' over time",
+       x = "Year",
+       y = "Count") +
+  theme_minimal()
+```
+
+9.  Use ggplot to plot the distribution of the name of your choice, *x-axis is `year`* and y-axis is `counts`. Use `geom_bar()`, `geom_line()`, and `facet_wrap()` to separate females and males (use `scale="free"` to free the scales) .
+
+```{r}
+#Code here
+emma_data <- subset(bbnames, name == "Emma")
+
+ggplot(emma_data, aes(x = year)) +
+  geom_bar(aes(fill = sex), position = "dodge") +  
+  geom_line(stat = "count", aes(group = sex, color = sex), size = 1) +  
+  facet_wrap(~ sex, scales = "free") +  
+  labs(title = "Distribution of the name 'Emma' over time",
+       x = "Year",
+       y = "Count") +
+  theme_minimal()
+```
+
+### Pilots certification data
+
+Data was obtained from the Federation Aviation Administration (FAA) in June 2023 on pilot certification. The data has over 450000 pilots records and contained the following:
+
+-   ID: pilot ID
+-   STATE: US state where the pilot lives
+-   CertLevel: the certification level (Airline, Commercial, Student, Sport, Private, and Recreational),
+-   MedClass: the medical class,
+-   MedExpMonth: the medical expire month, and
+-   MedExpYear: the medical expire year.
+
+Read the data in R and called it **`pilots`**:
+
+```{r}
+# Code here
+
+# load packages
+library(data.table)
+library(tidyverse)
+
+# Load the data 
+pilots = fread("https://pages.uwf.edu/acohen/teaching/datasets/pilotscertification.csv")
+pilots
+```
+
+10. Find how many pilots per certification level will have their medical certification expires the current year and month
+
+```{r}
+# Code here
+# Get current year and month
+current_year <- year(Sys.Date())
+current_month <- month(Sys.Date())
+
+# Filter for pilots whose medical certification expires this year and month
+pilots_expiring <- pilots %>%
+  filter(MedExpYear == current_year, MedExpMonth == current_month)
+
+# Group by certification level and count the number of pilots per certification level
+pilots_count <- pilots_expiring %>%
+  group_by(CertLevel) %>%
+  summarise(Count = n())
+
+print(pilots_count)
+```
